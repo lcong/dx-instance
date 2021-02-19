@@ -30,6 +30,8 @@ D3DApp::D3DApp(HINSTANCE hInstance)
 	m_Maximized(false),
 	m_Resizing(false),
 	m_Enable4xMsaa(false),
+	m_EnableDepthTest(false),
+	m_EnableDebug(false),
 	m_4xMsaaQuality(0),
 	m_pd3dDevice(nullptr),
 	m_pd3dImmediateContext(nullptr),
@@ -74,28 +76,35 @@ int D3DApp::Run()
 
 	m_Timer.Reset();
 
-	while (msg.message != WM_QUIT)
+	if (m_EnableDebug)
 	{
-		if (PeekMessage(&msg, 0, 0, 0, PM_REMOVE))
+		while (msg.message != WM_QUIT)
 		{
-			TranslateMessage(&msg);
-			DispatchMessage(&msg);
-		}
-		else
-		{
-			m_Timer.Tick();
-
-			if (!m_AppPaused)
+			if (PeekMessage(&msg, 0, 0, 0, PM_REMOVE))
 			{
-				CalculateFrameStats();
-				UpdateScene(m_Timer.DeltaTime());
-				DrawScene();
+				TranslateMessage(&msg);
+				DispatchMessage(&msg);
 			}
 			else
 			{
-				Sleep(100);
+				m_Timer.Tick();
+
+				if (!m_AppPaused)
+				{
+					CalculateFrameStats();
+					UpdateScene(m_Timer.DeltaTime());
+					DrawScene();
+				}
+				else
+				{
+					Sleep(100);
+				}
 			}
 		}
+	}
+	else
+	{
+		DrawScene();
 	}
 
 	return (int)msg.wParam;
@@ -132,13 +141,18 @@ void D3DApp::OnResize()
 
 	// 重设交换链并且重新创建渲染目标视图
 	ComPtr<ID3D11Texture2D> backBuffer;
-	HR(m_pSwapChain->ResizeBuffers(1, m_ClientWidth, m_ClientHeight, DXGI_FORMAT_R8G8B8A8_UNORM, 0));
+	if (m_EnableDebug)
+	{
+		HR(m_pSwapChain->ResizeBuffers(1, m_ClientWidth, m_ClientHeight, DXGI_FORMAT_R8G8B8A8_UNORM, 0));
+	}
 	HR(m_pSwapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), reinterpret_cast<void**>(backBuffer.GetAddressOf())));
 	HR(m_pd3dDevice->CreateRenderTargetView(backBuffer.Get(), nullptr, m_pRenderTargetView.GetAddressOf()));
 	
 	// 设置调试对象名
-	D3D11SetDebugObjectName(backBuffer.Get(), "BackBuffer[0]");
-
+	if (m_EnableDebug)
+	{
+		D3D11SetDebugObjectName(backBuffer.Get(), "BackBuffer[0]");
+	}
 	backBuffer.Reset();
 
 
@@ -168,12 +182,20 @@ void D3DApp::OnResize()
 	depthStencilDesc.MiscFlags = 0;
 
 	// 创建深度缓冲区以及深度模板视图
-	HR(m_pd3dDevice->CreateTexture2D(&depthStencilDesc, nullptr, m_pDepthStencilBuffer.GetAddressOf()));
-	HR(m_pd3dDevice->CreateDepthStencilView(m_pDepthStencilBuffer.Get(), nullptr, m_pDepthStencilView.GetAddressOf()));
-
+	if (m_EnableDepthTest)
+	{
+		HR(m_pd3dDevice->CreateTexture2D(&depthStencilDesc, nullptr, m_pDepthStencilBuffer.GetAddressOf()));
+		HR(m_pd3dDevice->CreateDepthStencilView(m_pDepthStencilBuffer.Get(), nullptr, m_pDepthStencilView.GetAddressOf()));
+	}
 	// 将渲染目标视图和深度/模板缓冲区结合到管线
-	m_pd3dImmediateContext->OMSetRenderTargets(1, m_pRenderTargetView.GetAddressOf(), m_pDepthStencilView.Get());
-
+	if (m_EnableDepthTest)
+	{
+		m_pd3dImmediateContext->OMSetRenderTargets(1, m_pRenderTargetView.GetAddressOf(), m_pDepthStencilView.Get());
+	}
+	else
+	{
+		m_pd3dImmediateContext->OMSetRenderTargets(1, m_pRenderTargetView.GetAddressOf(), nullptr);
+	}
 	// 设置视口变换
 	m_ScreenViewport.TopLeftX = 0;
 	m_ScreenViewport.TopLeftY = 0;
@@ -185,10 +207,16 @@ void D3DApp::OnResize()
 	m_pd3dImmediateContext->RSSetViewports(1, &m_ScreenViewport);
 
 	// 设置调试对象名
-	D3D11SetDebugObjectName(m_pDepthStencilBuffer.Get(), "DepthStencilBuffer");
-	D3D11SetDebugObjectName(m_pDepthStencilView.Get(), "DepthStencilView");
-	D3D11SetDebugObjectName(m_pRenderTargetView.Get(), "BackBufferRTV[0]");
-
+	if (m_EnableDebug)
+	{
+		if (m_EnableDepthTest)
+		{
+			D3D11SetDebugObjectName(m_pDepthStencilBuffer.Get(), "DepthStencilBuffer");
+			D3D11SetDebugObjectName(m_pDepthStencilView.Get(), "DepthStencilView");
+		}
+		D3D11SetDebugObjectName(m_pRenderTargetView.Get(), "BackBufferRTV[0]");
+	}
+	
 }
 
 LRESULT D3DApp::MsgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
@@ -420,9 +448,6 @@ bool D3DApp::InitDirect3D()
 		DXGI_FORMAT_R32G32B32A32_UINT, 4, &m_4xMsaaQuality);
 	assert(m_4xMsaaQuality > 0);
 
-
-
-
 	ComPtr<IDXGIDevice> dxgiDevice = nullptr;
 	ComPtr<IDXGIAdapter> dxgiAdapter = nullptr;
 	ComPtr<IDXGIFactory1> dxgiFactory1 = nullptr;	// D3D11.0(包含DXGI1.1)的接口类
@@ -505,15 +530,16 @@ bool D3DApp::InitDirect3D()
 		HR(dxgiFactory1->CreateSwapChain(m_pd3dDevice.Get(), &sd, m_pSwapChain.GetAddressOf()));
 	}
 
-	
 
 	// 可以禁止alt+enter全屏
 	dxgiFactory1->MakeWindowAssociation(m_hMainWnd, DXGI_MWA_NO_ALT_ENTER | DXGI_MWA_NO_WINDOW_CHANGES);
 
 	// 设置调试对象名
-	D3D11SetDebugObjectName(m_pd3dImmediateContext.Get(), "ImmediateContext");
-	DXGISetDebugObjectName(m_pSwapChain.Get(), "SwapChain");
-
+	if (m_EnableDebug)
+	{
+		D3D11SetDebugObjectName(m_pd3dImmediateContext.Get(), "ImmediateContext");
+		DXGISetDebugObjectName(m_pSwapChain.Get(), "SwapChain");
+	}
 	// 每当窗口被重新调整大小的时候，都需要调用这个OnResize函数。现在调用
 	// 以避免代码重复
 	OnResize();

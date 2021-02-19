@@ -13,6 +13,7 @@ CaseApp::CaseApp(HINSTANCE hInstance)
 	: D3DApp(hInstance)
 {
 	m_MainWndCaption = L"01_case_depth_test_enable";
+	m_EnableDepthTest = true;
 }
 
 CaseApp::~CaseApp()

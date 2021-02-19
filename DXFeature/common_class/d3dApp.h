@@ -13,7 +13,16 @@
 #pragma comment(lib, "dxguid.lib")
 #pragma comment(lib, "D3DCompiler.lib")
 #pragma comment(lib, "winmm.lib")
-
+#pragma comment(lib, "dwrite.lib")
+/*
+#pragma comment(lib, "d2d1.lib")
+#pragma comment(lib, "dwrite.lib")
+#pragma comment(lib, "d3d11.lib")
+#pragma comment(lib, "dxgi.lib")
+#pragma comment(lib, "dxguid.lib")
+#pragma comment(lib, "D3DCompiler.lib")
+#pragma comment(lib, "winmm.lib")
+*/
 class D3DApp
 {
 public:
@@ -48,6 +57,8 @@ protected:
 	bool      m_Maximized;       // 应用是否最大化
 	bool      m_Resizing;        // 窗口大小是否变化
 	bool	  m_Enable4xMsaa;	 // 是否开启4倍多重采样
+	bool	  m_EnableDepthTest; //是否开启深度测试
+	bool	  m_EnableDebug;	//是否开启图形调试
 	UINT      m_4xMsaaQuality;   // MSAA支持的质量等级
 
 
