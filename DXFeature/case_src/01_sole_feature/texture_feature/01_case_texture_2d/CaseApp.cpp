@@ -16,6 +16,7 @@ CaseApp::CaseApp(HINSTANCE hInstance)
 	: D3DApp(hInstance)
 {
 	m_MainWndCaption = L"01_case_texture_2d";
+	m_EnableDebug = false;
 }
 
 CaseApp::~CaseApp()
@@ -107,7 +108,7 @@ bool CaseApp::initResource()
 	ws << pictureFileName.c_str();
 	HR(DirectX::CreateDDSTextureFromFile(m_pd3dDevice.Get(), ws.str().c_str(), nullptr, m_pWoodCrate.GetAddressOf()));
 	
-	
+
 	//初始化纹理过滤器
 	D3D11_SAMPLER_DESC sampDesc;
 	ZeroMemory(&sampDesc, sizeof(sampDesc));

@@ -12,7 +12,8 @@ const D3D11_INPUT_ELEMENT_DESC CaseApp::VertexPosColor::inputLayout[2] = {
 CaseApp::CaseApp(HINSTANCE hInstance)
 	: D3DApp(hInstance)
 {
-	m_MainWndCaption = L"01_case_draw_triangle";
+	m_MainWndCaption = L"01_case_scissor_enable";
+	m_EnableDebug = false;
 }
 
 CaseApp::~CaseApp()
@@ -33,8 +34,8 @@ bool CaseApp::initEffect()
 	ComPtr<ID3DBlob> blob;
 	std::wstringstream vsCsoFileWss;
 	std::wstringstream vsFileWss;
-	std::string vsCsoFileName = FileSystem::getPath("shader_source/01_sole_feature/draw_mode_feature/01_case_draw_triangle/01_case_draw_triangle_vs.cso");
-	std::string vsFileName = FileSystem::getPath("shader_source/01_sole_feature/draw_mode_feature/01_case_draw_triangle/01_case_draw_triangle_vs.hlsl");
+	std::string vsCsoFileName = FileSystem::getPath("shader_source/01_sole_feature/scissor_feature/01_case_scissor_enable/01_case_scissor_enable_vs.cso");
+	std::string vsFileName = FileSystem::getPath("shader_source/01_sole_feature/scissor_feature/01_case_scissor_enable/01_case_scissor_enable_vs.hlsl");
 	vsCsoFileWss << vsCsoFileName.c_str();
 	vsFileWss << vsFileName.c_str();
 	//创建顶点着色器
@@ -44,8 +45,8 @@ bool CaseApp::initEffect()
 	HR(m_pd3dDevice->CreateInputLayout(VertexPosColor::inputLayout, ARRAYSIZE(VertexPosColor::inputLayout), blob->GetBufferPointer(),
 		blob->GetBufferSize(), m_pVertexLayout.GetAddressOf()));
 
-	std::string psCsoFileName = FileSystem::getPath("shader_source/01_sole_feature/draw_mode_feature/01_case_draw_triangle/01_case_draw_triangle_ps.cso");
-	std::string psFileName = FileSystem::getPath("shader_source/01_sole_feature/draw_mode_feature/01_case_draw_triangle/01_case_draw_triangle_ps.hlsl");
+	std::string psCsoFileName = FileSystem::getPath("shader_source/01_sole_feature/scissor_feature/01_case_scissor_enable/01_case_scissor_enable_ps.cso");
+	std::string psFileName = FileSystem::getPath("shader_source/01_sole_feature/scissor_feature/01_case_scissor_enable/01_case_scissor_enable_ps.hlsl");
 	std::wstringstream psCsoFileWss;
 	std::wstringstream psFileWss;
 	psCsoFileWss << psCsoFileName.c_str();
@@ -81,13 +82,31 @@ bool CaseApp::initResource()
 	ZeroMemory(&initData,sizeof(initData));
 	initData.pSysMem = vertexData;
 	HR(m_pd3dDevice->CreateBuffer(&vbd, &initData, m_pVertexBuffer.GetAddressOf()));
-	
+
+	//创建rasterstate
+	D3D11_RASTERIZER_DESC rasterDesc;
+	ZeroMemory(&rasterDesc, sizeof(rasterDesc));
+	//使能裁切
+	rasterDesc.FillMode = D3D11_FILL_SOLID;
+	rasterDesc.CullMode = D3D11_CULL_NONE;
+	rasterDesc.ScissorEnable = true;
+	HR(m_pd3dDevice->CreateRasterizerState(&rasterDesc,m_pRasterizeState.GetAddressOf()));
+	//设置裁切窗口大小
+	D3D11_RECT scissorRect;
+	scissorRect.left = 0;
+	scissorRect.right = m_ClientWidth/2;
+	scissorRect.top = 0;
+	scissorRect.bottom = m_ClientHeight/2;
+
 	unsigned int stride = sizeof(VertexPosColor);
 	unsigned int offset = 0;
 	m_pd3dImmediateContext->IASetVertexBuffers(0, 1, m_pVertexBuffer.GetAddressOf(), &stride, &offset);
 	//设置图元类型，设置输入布局
 	m_pd3dImmediateContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	m_pd3dImmediateContext->IASetInputLayout(m_pVertexLayout.Get());
+	//设置裁切
+	m_pd3dImmediateContext->RSSetState(m_pRasterizeState.Get());
+	m_pd3dImmediateContext->RSSetScissorRects(1, &scissorRect);
 
 	//将着色器绑定到渲染管线
 	m_pd3dImmediateContext->VSSetShader(m_pVertexShader.Get(), nullptr, 0);

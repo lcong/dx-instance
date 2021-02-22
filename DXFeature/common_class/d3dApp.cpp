@@ -2,6 +2,7 @@
 #include "d3dUtil.h"
 #include "DXTrace.h"
 #include <sstream>
+#include <comdef.h>
 
 namespace
 {
@@ -138,16 +139,40 @@ void D3DApp::OnResize()
 	m_pRenderTargetView.Reset();
 	m_pDepthStencilView.Reset();
 	m_pDepthStencilBuffer.Reset();
+	m_pTargetViewBuffer.Reset();
 
 	// 重设交换链并且重新创建渲染目标视图
-	ComPtr<ID3D11Texture2D> backBuffer;
+	ComPtr<ID3D11Texture2D> backBuffer;	
 	if (m_EnableDebug)
 	{
 		HR(m_pSwapChain->ResizeBuffers(1, m_ClientWidth, m_ClientHeight, DXGI_FORMAT_R8G8B8A8_UNORM, 0));
 	}
 	HR(m_pSwapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), reinterpret_cast<void**>(backBuffer.GetAddressOf())));
 	HR(m_pd3dDevice->CreateRenderTargetView(backBuffer.Get(), nullptr, m_pRenderTargetView.GetAddressOf()));
-	
+
+	/*
+		//创建2d纹理作为rendertarget
+		D3D11_TEXTURE2D_DESC targetViewDesc;
+		targetViewDesc.Width = m_ClientWidth;
+		targetViewDesc.Height = m_ClientHeight;
+		targetViewDesc.MipLevels = 1;
+		targetViewDesc.ArraySize = 1;
+		targetViewDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+		targetViewDesc.SampleDesc.Count = 1;
+		targetViewDesc.SampleDesc.Quality = 0;
+		targetViewDesc.Usage = D3D11_USAGE_DEFAULT;
+		targetViewDesc.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;
+		targetViewDesc.CPUAccessFlags = 0;
+		targetViewDesc.MiscFlags = 0;
+		HR(m_pd3dDevice->CreateTexture2D(&targetViewDesc, nullptr, m_pTargetViewBuffer.GetAddressOf()));
+
+		D3D11_RENDER_TARGET_VIEW_DESC rtvDesc;
+		rtvDesc.Format = targetViewDesc.Format;
+		rtvDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
+		rtvDesc.Texture2D.MipSlice = 0;
+		HR(m_pd3dDevice->CreateRenderTargetView(m_pTargetViewBuffer.Get(),&rtvDesc, m_pRenderTargetView.GetAddressOf()));
+	*/
+
 	// 设置调试对象名
 	if (m_EnableDebug)
 	{
@@ -452,12 +477,48 @@ bool D3DApp::InitDirect3D()
 	ComPtr<IDXGIAdapter> dxgiAdapter = nullptr;
 	ComPtr<IDXGIFactory1> dxgiFactory1 = nullptr;	// D3D11.0(包含DXGI1.1)的接口类
 	ComPtr<IDXGIFactory2> dxgiFactory2 = nullptr;	// D3D11.1(包含DXGI1.2)特有的接口类
+	/*
+	ComPtr<IDXGIFactory> factory = nullptr;
+	ComPtr<IDXGIAdapter> adapter = nullptr;
+	CreateDXGIFactory(__uuidof(factory), reinterpret_cast<void**>(factory.GetAddressOf()));
+	factory->EnumAdapters(1, adapter.GetAddressOf());
+	DXGI_ADAPTER_DESC apDesc;
+	adapter->GetDesc(&apDesc);
+	_bstr_t b(apDesc.Description);
+	const char* s = b;
+	
+	ComPtr<IDXGIOutput> output = nullptr;
+	// 尝试修改函数中的数字 观察控制台输出
+	adapter->EnumOutputs(1, output.GetAddressOf());
+	DXGI_OUTPUT_DESC outDesc;
+	output->GetDesc(&outDesc);
+	_bstr_t out(outDesc.DeviceName);
+	const char* o = out;
+	
+	UINT num = 0;
+	DXGI_FORMAT format = DXGI_FORMAT_R8G8B8A8_UNORM;
+	UINT flags = DXGI_ENUM_MODES_INTERLACED;
+	output->GetDisplayModeList(format, flags, &num, 0);
+
+	DXGI_MODE_DESC* pDescs = new DXGI_MODE_DESC[num];
+	output->GetDisplayModeList(format, flags, &num, pDescs);
+	*/
 
 	// 为了正确创建 DXGI交换链，首先我们需要获取创建 D3D设备 的 DXGI工厂，否则会引发报错：
 	// "IDXGIFactory::CreateSwapChain: This function is being called with a device from a different IDXGIFactory."
 	HR(m_pd3dDevice.As(&dxgiDevice));
 	HR(dxgiDevice->GetAdapter(dxgiAdapter.GetAddressOf()));
 	HR(dxgiAdapter->GetParent(__uuidof(IDXGIFactory1), reinterpret_cast<void**>(dxgiFactory1.GetAddressOf())));
+	DXGI_ADAPTER_DESC apDesc;
+	dxgiAdapter->GetDesc(&apDesc);
+	_bstr_t b(apDesc.Description);
+	const char* s = b;
+
+	if (!m_EnableDebug)
+	{
+		m_ClientWidth = 64;
+		m_ClientHeight = 64;
+	}
 
 	// 查看该对象是否包含IDXGIFactory2接口
 	hr = dxgiFactory1.As(&dxgiFactory2);
@@ -487,6 +548,7 @@ bool D3DApp::InitDirect3D()
 		sd.BufferCount = 1;
 		sd.SwapEffect = DXGI_SWAP_EFFECT_DISCARD;
 		sd.Flags = 0;
+		
 
 		DXGI_SWAP_CHAIN_FULLSCREEN_DESC fd;
 		fd.RefreshRate.Numerator = 60;
@@ -529,7 +591,6 @@ bool D3DApp::InitDirect3D()
 		sd.Flags = 0;
 		HR(dxgiFactory1->CreateSwapChain(m_pd3dDevice.Get(), &sd, m_pSwapChain.GetAddressOf()));
 	}
-
 
 	// 可以禁止alt+enter全屏
 	dxgiFactory1->MakeWindowAssociation(m_hMainWnd, DXGI_MWA_NO_ALT_ENTER | DXGI_MWA_NO_WINDOW_CHANGES);
