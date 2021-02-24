@@ -25,6 +25,7 @@ D3DApp::D3DApp(HINSTANCE hInstance)
 	m_MainWndCaption(L"DirectX11 Initialization"),
 	m_ClientWidth(800),
 	m_ClientHeight(600),
+	m_setSize(64),
 	m_hMainWnd(nullptr),
 	m_AppPaused(false),
 	m_Minimized(false),
@@ -516,8 +517,8 @@ bool D3DApp::InitDirect3D()
 
 	if (!m_EnableDebug)
 	{
-		m_ClientWidth = 64;
-		m_ClientHeight = 64;
+		m_ClientWidth = m_setSize;
+		m_ClientHeight = m_setSize;
 	}
 
 	// 查看该对象是否包含IDXGIFactory2接口

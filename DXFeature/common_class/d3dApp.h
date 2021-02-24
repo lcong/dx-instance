@@ -86,6 +86,7 @@ protected:
 	std::wstring m_MainWndCaption;                       // 主窗口标题
 	int m_ClientWidth;                                   // 视口宽度
 	int m_ClientHeight;                                  // 视口高度
+	int m_setSize;
 };
 
 #endif // D3DAPP_H
