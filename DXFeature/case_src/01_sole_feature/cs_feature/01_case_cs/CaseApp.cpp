@@ -8,7 +8,7 @@
 #include "ScreenGrab.h"
 
 const D3D11_INPUT_ELEMENT_DESC CaseApp::VertexPosColor::inputLayout[2] = {
-	{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+	{ "POSITION", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
 	{ "COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 16, D3D11_INPUT_PER_VERTEX_DATA, 0 }
 };
 
@@ -183,7 +183,7 @@ void CaseApp::Compute()
 	m_pd3dImmediateContext->CSSetShader(m_pComputerShader.Get(), nullptr, 0);
 	m_pd3dImmediateContext->CSSetUnorderedAccessViews(0, 1, m_pTextureOut_UAV.GetAddressOf(), nullptr);
 	m_pd3dImmediateContext->Dispatch(1,1, 1);
-	//HR(DirectX::SaveDDSTextureToFile(m_pd3dImmediateContext.Get(), m_pTextureOutput.Get(),L"D:woodCreate.dds"));
+	//HR(DirectX::SaveDDSTextureToFile(m_pd3dImmediateContext.Get(), m_pTextureOutput.Get(),L"cs.dds"));
 }
 
 void CaseApp::OnResize()
