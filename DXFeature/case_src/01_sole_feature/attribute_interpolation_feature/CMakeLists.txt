@@ -1,0 +1,2 @@
+﻿add_subdirectory("01_case_noperspective_interpolation")
+add_subdirectory("02_case_linear_interpolation")
