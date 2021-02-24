@@ -1,0 +1,1 @@
+﻿add_subdirectory("01_case_gs_triangle_to_point")
