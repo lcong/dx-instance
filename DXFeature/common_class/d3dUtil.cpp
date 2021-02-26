@@ -7,7 +7,7 @@ HRESULT CreateShaderFromFile(
 	ID3DBlob** ppBlobOut)
 {
 	HRESULT hr = S_OK;
-
+	const char* pData = nullptr;
 	// 寻找是否有已经编译好的顶点着色器
 	if (csoFileNameInOut && D3DReadFileToBlob(csoFileNameInOut, ppBlobOut) == S_OK)
 	{
@@ -32,6 +32,7 @@ HRESULT CreateShaderFromFile(
 			if (errorBlob != nullptr)
 			{
 				OutputDebugStringA(reinterpret_cast<const char*>(errorBlob->GetBufferPointer()));
+				pData = (reinterpret_cast<const char*>(errorBlob->GetBufferPointer()));
 			}
 			SAFE_RELEASE(errorBlob);
 			return hr;
