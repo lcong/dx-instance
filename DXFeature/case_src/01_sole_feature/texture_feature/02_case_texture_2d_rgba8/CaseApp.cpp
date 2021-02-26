@@ -17,7 +17,7 @@ CaseApp::CaseApp(HINSTANCE hInstance)
 {
 	m_MainWndCaption = L"02_case_texture_2d_rgba8";
 	m_EnableDebug = false;
-	m_setSize = 4;
+	m_setSize = 8;
 }
 
 CaseApp::~CaseApp()
@@ -138,7 +138,7 @@ bool CaseApp::initResource()
 	D3D11_SUBRESOURCE_DATA texInitData[2];
 	texInitData[0].pSysMem = data;
 	texInitData[0].SysMemPitch = 16;//当前子资源一行所占的字节数据(2d/3d)使用
-	texInitData[0].SysMemSlicePitch = 0;//当前子资源一个切片所占的字节数据（3d)使用
+	texInitData[0].SysMemSlicePitch = 64;//当前子资源一个切片所占的字节数据（3d)使用
 
 	texInitData[1].pSysMem = data1;
 	texInitData[1].SysMemPitch = 8;//当前子资源一行所占的字节数据(2d/3d)使用

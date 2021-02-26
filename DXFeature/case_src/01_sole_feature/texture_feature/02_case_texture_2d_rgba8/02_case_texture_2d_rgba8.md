@@ -92,6 +92,8 @@ float4 PS(VertexOut pIn):SV_Target
 
 
 
+
+
 ![02_case_texture_2d_rgba8_result](/02_case_texture_2d_rgba8_result.png)
 
 
@@ -99,6 +101,6 @@ float4 PS(VertexOut pIn):SV_Target
 
 
 ```
-如上，会有黄蓝两色绘制
+如上，会有四色纹理输出
 ```
 
