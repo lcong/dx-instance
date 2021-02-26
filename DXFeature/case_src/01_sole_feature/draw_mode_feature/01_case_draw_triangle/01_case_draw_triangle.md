@@ -26,7 +26,7 @@ graph TD;
 	B-->C[CreateSwapChain];
 	C-->D[context->OMSetRenderTargets];
 	D-->E[context->RSSetViewports];
-	E-->I[contest->IASetVertexBuffers];
+	E-->I[context->IASetVertexBuffers];
 	I-->F[context->ClearRenderTargetView];
 	F-->G[context->draw];
 	G-->H[swapchain->present]
