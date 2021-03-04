@@ -1,1 +1,2 @@
 ﻿add_subdirectory("01_case_stream_output")
+add_subdirectory("02_case_stream_output_with_patch_list")
