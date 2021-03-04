@@ -1,0 +1,2 @@
+add_subdirectory("01_case_clipping_with_culldistance")
+add_subdirectory("02_case_clipping_with_clipdistance")
