@@ -1,2 +1,5 @@
 ﻿add_subdirectory("01_case_texture_2d")
 add_subdirectory("02_case_texture_2d_rgba8")
+add_subdirectory("03_case_texture_2d_array_rgba8")
+add_subdirectory("04_case_texture_cube_rgba8")
+add_subdirectory("05_case_texture_cube_array_rgba8")
